@@ -40,3 +40,7 @@ projects:
     added: 2026-10-16
     by: emre
     reviewed: Reviewed by the tr_TR team.
+  - path: wp-plugins/user-switching/dev
+    added: 2026-10-17
+    by: emre
+    reviewed: Test entry for the PR checks; not to be merged.
