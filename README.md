@@ -46,7 +46,6 @@ client can verify what it downloaded. Each release holds:
 |---|---|---|
 | nl_NL | yes | maintained |
 | tr_TR | yes | maintained |
-| hi_IN | yes | draft |
 | sv_SE | – | draft |
 | el | – | draft |
 | th | – | draft |
