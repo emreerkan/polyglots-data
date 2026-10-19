@@ -1,0 +1,83 @@
+# polyglots rules for hi_IN
+#
+# Draft: taken from the hi_IN glossary on translate.wordpress.org and from
+# what approved WordPress core translations already do. Not yet confirmed by
+# the hi_IN locale team. hi_IN has no published style guide, only the
+# glossary.
+#
+# Counts are from the approved translations of wp/dev and wp/dev/admin,
+# 8,817 strings including plural forms, exported on 2026-10-19.
+#
+# Check the file with: polyglots rules check --file locales/hi_IN/rules.yaml
+
+schema: 2
+
+formality: formal
+
+register: '- Address the reader as "आप", never "तुम" or "तू". Keep it polite and plain: buttons and instructions use the imperative form that ends in "-एँ" or "-ए", such as "सहेजें" and "चुनें", not "करिए" or "कीजिए".'
+
+guidance: |
+  The hi_IN glossary is the team's reference; use its terms.
+  End a sentence with the danda "।" where the English ends with a full stop, not with a Latin full stop or a vertical bar.
+  Write Western digits (0-9), not Devanagari digits.
+  Write the nukta in loanwords that need it, such as "फ़ाइल", "फ़ीड" and "फ़िल्टर".
+  Interface and technical nouns are usually transliterated, such as "प्लगइन", "पोस्ट", "थीम" and "डैशबोर्ड". General concepts are translated, such as "लेखक", "टिप्पणी", "शीर्षक" and "उपयोगकर्ता".
+  Keep acronyms and code in Latin script, such as API, PHP, JSON, CSS and HTML.
+  Placeholders may change order, because Hindi puts the verb last, as in "%2$s में से %1$s".
+
+mistakes:
+  - wrong: इंस्टॉल
+    right: स्थापित
+    note: The glossary writes install as "स्थापित". Core has 137 "स्थापित" and 13 "इंस्टॉल".
+  - wrong: अद्यतन
+    right: अपडेट
+    note: The glossary writes update as "अपडेट". Core has 277 "अपडेट" and 30 "अद्यतन".
+  - wrong: शैली
+    right: स्टाइल
+    note: The glossary writes style as "स्टाइल". Core has 44 "स्टाइल" and 15 "शैली".
+  - wrong: छवि
+    right: चित्र
+    note: The glossary writes image as "चित्र". Core still has 207 "छवि" and 76 "चित्र".
+  - wrong: अनुलग्नक
+    right: संलग्न
+    note: The glossary writes attachment as "संलग्न". Core has 28 "संलग्न" and 13 "अनुलग्नक".
+  - wrong: पैरेंट
+    right: पेरेंट
+    note: The glossary writes parent as "पेरेंट". Core has 11 "पेरेंट" and 9 "पैरेंट".
+  - wrong: अभिभावक
+    right: पेरेंट
+    note: The glossary writes parent as "पेरेंट", for parent pages and items. Core has 11 "पेरेंट" and 1 "अभिभावक".
+  - wrong: फाइल
+    right: फ़ाइल
+    note: File takes the nukta. Core has 202 "फ़ाइल" and 70 "फाइल".
+  - wrong: फिल्टर
+    right: फ़िल्टर
+    note: Filter takes the nukta. Core has 39 "फ़िल्टर" and 9 "फिल्टर".
+  - wrong: फीड
+    right: फ़ीड
+    note: Feed takes the nukta. Core has 21 "फ़ीड" and 7 "फीड".
+  - wrong: फॉर्म
+    right: फ़ॉर्म
+    note: Form takes the nukta. Core has 11 "फ़ॉर्म" and 27 "फॉर्म".
+  - wrong: जरूरत
+    right: ज़रूरत
+    note: The word takes the nukta. Core has 4 "ज़रूरत" and 12 "जरूरत".
+  - wrong: चिन्ह
+    right: चिह्न
+    note: The standard spelling is "चिह्न". Core has 23 "चिह्न" and none of "चिन्ह".
+
+patterns:
+  - find: '[\u0900-\u097F]\.\s*$'
+    level: hint
+    note: A Hindi sentence ends with the danda ("।"), not a Latin full stop. Where the English ends with a full stop, core has 2,606 danda and 310 Latin full stops.
+  - find: '[\u0900-\u097F]\s*\|\s*$'
+    level: hint
+    when: { notSource: '|' }
+    note: Use the danda ("।"), not a vertical bar (|), to end a sentence. Core has 52 sentences ending with a vertical bar.
+  - find: '[A-Za-z0-9\s]\u0903|\u0903\s*$'
+    level: hint
+    when: { source: ':' }
+    note: This looks like the visarga ("ः") typed for a colon. Use a colon (:), which screen readers and search treat as punctuation.
+  - find: '[\u0966-\u096F]'
+    level: hint
+    note: Write Western digits (0-9), not Devanagari digits.
