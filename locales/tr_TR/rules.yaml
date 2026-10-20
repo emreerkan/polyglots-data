@@ -170,6 +170,26 @@ patterns:
     level: hint
     note: Turkish groups thousands with a full stop and writes decimals with a comma, as 1.000,5
 
+  # A date or time format is rearranged, not copied: Turkish puts the day
+  # first and uses 24-hour time. Core: "g:i a" is "H:i", "F j, Y" is "j F Y";
+  # the Gutenberg date settings in core still copy the English formats.
+  - find: '(?<![A-Za-z\\])[gh]:i(?![A-Za-z])'
+    level: hint
+    when: { source: ':i' }
+    note: Use 24-hour time in a time format, as "H:i" for "g:i a"
+  - text: 'F j, Y'
+    level: hint
+    when: { source: 'F j, Y' }
+    note: Use the Turkish date order, as "j F Y" for "F j, Y"
+  - text: 'M j, Y'
+    level: hint
+    when: { source: 'M j, Y' }
+    note: Use the Turkish date order, as "j M Y" for "M j, Y"
+  - text: 'n/j/Y'
+    level: hint
+    when: { source: 'n/j/Y' }
+    note: Use the Turkish numeric date, as "d.m.Y" for "n/j/Y"
+
   # §7. One space between words. Some of these copy a double space in the
   # source, which is why this asks rather than fixes. TM: 304.
   - find: '\S {2,}\S'
@@ -189,6 +209,7 @@ guidance: |
   Keep the source's final punctuation. Buttons are imperative without a full stop; confirmations are questions with a separate mi; info messages are full sentences.
   Address the user as siz, but do not add a subject the source does not need.
   Keep line breaks, empty lines and HTML structure of long texts; translate sentence by sentence.
+  Date and time formats (PHP codes) take Turkish order and 24-hour time: "F j, Y" is "j F Y", "g:i a" is "H:i", "n/j/Y" is "d.m.Y".
 
 # Turkish WordPress addresses the reader as "siz". These are the lines
 # polyglots used for every locale without a register of its own.
