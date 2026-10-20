@@ -31,13 +31,17 @@ https://github.com/emreerkan/polyglots-data/releases/latest/download/index.json
 ```
 
 Every entry in it points at a versioned asset and carries its SHA-512, so a
-client can verify what it downloaded. Each release holds:
+client can verify what it downloaded. A rules file newer than the oldest
+schema still served is listed once per schema, oldest first: a client takes
+the newest one it can read, and releases that read only the first row for a
+locale still get updates. Each release holds:
 
 | Asset | Contents |
 |---|---|
 | `index.json` | The manifest: one entry per TM and per rules file |
 | `<locale>.tmx.gz` | The locale's TM |
 | `<locale>.rules.yaml` | The locale's rules file |
+| `<locale>.rules.schema<N>.yaml` | The same rules at an older schema, for polyglots releases that cannot read the newest (generated) |
 | `state.json`, `<locale>.units.json.gz` | The build cache (see below); not for clients |
 
 ## Locales
