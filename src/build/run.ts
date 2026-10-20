@@ -5,7 +5,8 @@ import { releaseUrl, type Manifest, type ManifestProject, type RulesEntry, type 
 import { isLongText } from '../paths.js'
 import { poToUnits } from '../po/units.js'
 import { resolveProjects } from '../resolve.js'
-import type { RulesCheckResult } from '../rules/check.js'
+import type { OlderRules, RulesCheckResult } from '../rules/check.js'
+import { minPolyglotsFor } from '../rules/downlevel.js'
 import { TMX_FORMAT_VERSION, writeTmx } from '../tmx/write.js'
 import type { Unit } from '../types.js'
 import { findSet, parseProjectApi, type SetInfo } from '../wporg/api.js'
@@ -24,7 +25,7 @@ const DAY = 86_400_000
 export interface BuildInput {
   repo: Repo; wp: WpLocales; previous: Previous; rebuild: string[]; force: boolean; accept: Set<string>
   tag: string; toolVersion: string; minPolyglots: string
-  rules: Map<string, { bytes: Buffer; check: RulesCheckResult }>; now: Date
+  rules: Map<string, { bytes: Buffer; check: RulesCheckResult; older?: OlderRules[] }>; now: Date
 }
 export interface ProjectLog { locale: string; path: string; action: 'cached' | 'downloaded' | 'stale' | 'missing'; units: number; note?: string }
 export interface BuildResult { assets: Map<string, Buffer>; manifest: Manifest; state: State; log: ProjectLog[]; red: string[]; publish: boolean; downloads: number; toolVersion: string }
@@ -159,28 +160,46 @@ async function buildLocale(c: Ctx, l: LocaleData, loc: WpLocale): Promise<{ entr
   return { entry, state: { units: releaseUrl(input.tag, unitsName), sha512: unitsHash, projects: projectsState } }
 }
 
-/** Spec 8: a rules file is published as read, or left out when a check fails. */
+/**
+ * Spec 8: a rules file is published as read, or left out when a check fails.
+ * A file newer than OLDEST_SCHEMA is also published at each older schema,
+ * and those rows come first: a released client takes the first row for its
+ * locale, so a newer row first would refuse every client that cannot read it.
+ * Every row of a locale carries the same status and maintainers.
+ */
 function rulesEntries(c: Ctx): RulesEntry[] {
   const { input } = c
   const out: RulesEntry[] = []
+  const previous = (code: string, schema?: number) =>
+    (input.previous.index?.rules ?? []).filter((e) => e.locale === code && (schema === undefined || e.schema === schema))
   for (const [code, r] of [...input.rules].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
     const error = r.check.findings.find((f) => f.level === 'error')
     if (error) {
-      // The previous entry still points at the older asset in its own release; keep serving it.
-      const prev = input.previous.index?.rules.find((e) => e.locale === code)
-      if (prev) out.push(prev)
+      // The previous entries still point at the older assets in their own release; keep serving them.
+      out.push(...previous(code))
       c.red.push(`${code} rules: ${error.message}`)
       continue
     }
     const meta = input.repo.locales.get(code)?.meta
     const loc = input.wp.get(code)
     if (!meta || !loc) { c.red.push(`${code} rules: locale.yaml or the locale mapping is missing`); continue }
-    const name = `${code}.rules.yaml`
-    c.assets.set(name, r.bytes)
-    out.push({
-      locale: code, slug: manifestSlug(loc), url: releaseUrl(input.tag, name), sha512: sha512(r.bytes), schema: r.check.schema ?? 0,
-      minPolyglots: input.minPolyglots, status: meta.rules.status, maintainers: meta.maintainers.map((m) => m.wporg),
-    })
+    const row = (schema: number, name: string, bytes: Buffer): RulesEntry => {
+      c.assets.set(name, bytes)
+      return {
+        locale: code, slug: manifestSlug(loc), url: releaseUrl(input.tag, name), sha512: sha512(bytes), schema,
+        minPolyglots: minPolyglotsFor(schema, input.minPolyglots), status: meta.rules.status, maintainers: meta.maintainers.map((m) => m.wporg),
+      }
+    }
+    for (const o of [...(r.older ?? [])].sort((a, b) => a.schema - b.schema)) {
+      const olderError = o.check.findings.find((f) => f.level === 'error')
+      if (olderError) {
+        out.push(...previous(code, o.schema))
+        c.red.push(`${code} rules: ${olderError.message}`)
+        continue
+      }
+      out.push(row(o.schema, `${code}.rules.schema${o.schema}.yaml`, o.bytes))
+    }
+    out.push(row(r.check.schema ?? 0, `${code}.rules.yaml`, r.bytes))
   }
   return out
 }

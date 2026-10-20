@@ -181,6 +181,51 @@ describe('runBuild', () => {
     expect(r3.red).toEqual(['tr_TR rules: patterns[0].find: ReDoS check says vulnerable'])
     expect(selfCheck(r3.assets, r3.manifest, r3.state, 'data-20261023-030000')).toEqual([])
   })
+
+  describe('rules at several schemas', () => {
+    const files = { [apiUrl('wp/dev')]: api(1), [exportUrl('wp/dev', TR)]: po([['A', 'B']]) }
+    const check = (schema: number, error?: string) => ({
+      file: 'x', items: { regexes: [], fixes: [], prompts: [], whens: [] }, schema,
+      findings: error ? [{ level: 'error' as const, check: 'downlevel', message: error }] : [],
+    })
+    const three = Buffer.from('schema: 3\n')
+    const two = Buffer.from('# Generated\nschema: 2\n')
+    const url = (tag: string, name: string) => `https://github.com/emreerkan/polyglots-data/releases/download/${tag}/${name}`
+
+    it('puts the older schema first, each with its own minPolyglots', async () => {
+      const r = await runBuild(input({ repo: repo([]), minPolyglots: '1.2.0', rules: new Map([['tr_TR', { bytes: three, check: check(3), older: [{ schema: 2, bytes: two, check: check(2) }] }]]) }), client(files))
+      expect(r.manifest.rules).toEqual([
+        { locale: 'tr_TR', slug: 'tr', url: url('data-20261016-030000', 'tr_TR.rules.schema2.yaml'), sha512: sha512(two), schema: 2, minPolyglots: '1.0.0', status: 'maintained', maintainers: ['emre'] },
+        { locale: 'tr_TR', slug: 'tr', url: url('data-20261016-030000', 'tr_TR.rules.yaml'), sha512: sha512(three), schema: 3, minPolyglots: '1.2.0', status: 'maintained', maintainers: ['emre'] },
+      ])
+      expect(r.red).toEqual([])
+      expect(selfCheck(r.assets, r.manifest, r.state, 'data-20261016-030000')).toEqual([])
+    })
+
+    it('gives a schema 2 file the schema 2 minimum, whatever the pin', async () => {
+      const r = await runBuild(input({ repo: repo([]), minPolyglots: '1.2.0', rules: new Map([['tr_TR', { bytes: two, check: check(2) }]]) }), client(files))
+      expect(r.manifest.rules.map((e) => [e.schema, e.minPolyglots])).toEqual([[2, '1.0.0']])
+    })
+
+    it('keeps the previous older row when the older file fails, and still publishes the newest', async () => {
+      const ok = await runBuild(input({ repo: repo([]), minPolyglots: '1.2.0', rules: new Map([['tr_TR', { bytes: three, check: check(3), older: [{ schema: 2, bytes: two, check: check(2) }] }]]) }), client(files))
+      const tag = 'data-20261023-030000'
+      const r = await runBuild(input({
+        repo: repo([]), minPolyglots: '1.2.0', previous: previousFrom(ok), tag, now: new Date('2026-10-23T03:00:00Z'),
+        rules: new Map([['tr_TR', { bytes: Buffer.from('schema: 3\n# new\n'), check: check(3), older: [{ schema: 2, bytes: Buffer.alloc(0), check: check(2, 'schema 2 version: broken') }] }]]),
+      }), client(files))
+      expect(r.manifest.rules.map((e) => [e.schema, e.url])).toEqual([[2, url('data-20261016-030000', 'tr_TR.rules.schema2.yaml')], [3, url(tag, 'tr_TR.rules.yaml')]])
+      expect(r.assets.has('tr_TR.rules.schema2.yaml')).toBe(false)
+      expect(r.red).toEqual(['tr_TR rules: schema 2 version: broken'])
+      expect(selfCheck(r.assets, r.manifest, r.state, tag)).toEqual([])
+    })
+
+    it('keeps every previous row when the newest file fails', async () => {
+      const ok = await runBuild(input({ repo: repo([]), minPolyglots: '1.2.0', rules: new Map([['tr_TR', { bytes: three, check: check(3), older: [{ schema: 2, bytes: two, check: check(2) }] }]]) }), client(files))
+      const r = await runBuild(input({ repo: repo([]), previous: previousFrom(ok), tag: 'data-20261023-030000', now: new Date('2026-10-23T03:00:00Z'), rules: new Map([['tr_TR', { bytes: three, check: check(3, 'bad') }]]) }), client(files))
+      expect(r.manifest.rules).toEqual(ok.manifest.rules)
+    })
+  })
 })
 
 describe('publish rules', () => {
