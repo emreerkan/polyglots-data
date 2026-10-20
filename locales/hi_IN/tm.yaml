@@ -1,0 +1,71 @@
+# Projects added to the hi_IN TM, on top of core/tm.yaml.
+#
+# The plugins and themes among the most-installed on the hi locale stats
+# pages whose hi translation was at least 90% approved on 2026-10-19,
+# leaving out projects core/tm.yaml already has. shortcodes-ultimate comes
+# from stable: its dev was at 88%, its stable at 90%.
+projects:
+  - path: wp-plugins/burst-statistics/dev
+    added: 2026-10-19
+    by: emre
+    reviewed: At least 90% approved by the hi team on translate.wordpress.org.
+  - path: wp-plugins/wordpress-seo/dev
+    added: 2026-10-19
+    by: emre
+    reviewed: At least 90% approved by the hi team on translate.wordpress.org.
+  - path: wp-plugins/shortcodes-ultimate/stable
+    added: 2026-10-19
+    by: emre
+    reviewed: At least 90% approved by the hi team on translate.wordpress.org.
+  - path: wp-plugins/polylang/dev
+    added: 2026-10-19
+    by: emre
+    reviewed: At least 90% approved by the hi team on translate.wordpress.org.
+  - path: wp-plugins/click-to-chat-for-whatsapp/dev
+    added: 2026-10-19
+    by: emre
+    reviewed: At least 90% approved by the hi team on translate.wordpress.org.
+  - path: wp-plugins/redis-cache/dev
+    added: 2026-10-19
+    by: emre
+    reviewed: At least 90% approved by the hi team on translate.wordpress.org.
+  - path: wp-plugins/worker/dev
+    added: 2026-10-19
+    by: emre
+    reviewed: At least 90% approved by the hi team on translate.wordpress.org.
+  - path: wp-plugins/hello-dolly/dev
+    added: 2026-10-19
+    by: emre
+    reviewed: At least 90% approved by the hi team on translate.wordpress.org.
+  - path: wp-themes/ashe
+    added: 2026-10-19
+    by: emre
+    reviewed: At least 90% approved by the hi team on translate.wordpress.org.
+  - path: wp-themes/bard
+    added: 2026-10-19
+    by: emre
+    reviewed: At least 90% approved by the hi team on translate.wordpress.org.
+  - path: wp-themes/twentytwentytwo
+    added: 2026-10-19
+    by: emre
+    reviewed: At least 90% approved by the hi team on translate.wordpress.org.
+  - path: wp-themes/palmeria
+    added: 2026-10-19
+    by: emre
+    reviewed: At least 90% approved by the hi team on translate.wordpress.org.
+  - path: wp-themes/twentytwentythree
+    added: 2026-10-19
+    by: emre
+    reviewed: At least 90% approved by the hi team on translate.wordpress.org.
+  - path: wp-themes/envo-storefront
+    added: 2026-10-19
+    by: emre
+    reviewed: At least 90% approved by the hi team on translate.wordpress.org.
+  - path: wp-themes/jaxon
+    added: 2026-10-19
+    by: emre
+    reviewed: At least 90% approved by the hi team on translate.wordpress.org.
+  - path: wp-themes/zino
+    added: 2026-10-19
+    by: emre
+    reviewed: At least 90% approved by the hi team on translate.wordpress.org.
