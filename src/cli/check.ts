@@ -12,6 +12,7 @@ import { loadRepo, parseLocaleMeta } from '../config/load.js'
 import { hasErrors, type Finding } from '../findings.js'
 import { loadWpLocales } from '../locales.js'
 import { checkRulesFile, loadRulesContext } from '../rules/check.js'
+import { polyglotsBin } from '../rules/polyglots.js'
 import { fixSamples } from '../rules/fix-safety.js'
 import { extractItems } from '../rules/items.js'
 import { renderSummary, type Section } from '../summary.js'
@@ -23,6 +24,12 @@ const { values } = parseArgs({ options: {
 } })
 const write = (md: string) => (process.env.GITHUB_STEP_SUMMARY ? appendFileSync(process.env.GITHUB_STEP_SUMMARY, md) : process.stdout.write(md))
 const root = process.cwd()
+/**
+ * The checker's own checkout. PR CI runs the base commit's checker against
+ * the pull request's tree, so a pull request cannot change the checks it is
+ * judged by. Locally the two are the same folder.
+ */
+const own = join(import.meta.dirname, '..', '..')
 
 const read = (file: string): string => { try { return readFileSync(file, 'utf8') } catch { return '' } }
 const tryParse = (text: string): unknown => { try { return YAML.parse(text) } catch { return undefined } }
@@ -86,7 +93,9 @@ try {
   sections.push({ title: 'New projects', findings: np.findings, lines: np.lines.length ? np.lines : added.length ? [] : ['No new project.'] })
 
   // 4, 5, 7. Rules
-  const ctx = loadRulesContext(root)
+  // Others are checked with the base's polyglots; the maintainer's pull
+  // request may move the pin, and is checked with its own.
+  const ctx = { ...loadRulesContext(root), ...(author === REPO_MAINTAINER ? {} : { bin: polyglotsBin(own) }) }
   for (const f of files.filter((x) => /^locales\/[^/]+\/rules\.yaml$/.test(x))) {
     let headText: string
     try { headText = readFileSync(join(root, f), 'utf8') } catch { sections.push({ title: `Rules: ${f}`, lines: ['Removed.'] }); continue }
