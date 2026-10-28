@@ -3,7 +3,7 @@ import type { BuildResult } from './run.js'
 
 export const MAX_ATTENTION_LINES = 200
 
-export type ReportData = Pick<BuildResult, 'manifest' | 'log' | 'red' | 'publish' | 'downloads' | 'toolVersion'>
+export type ReportData = Pick<BuildResult, 'manifest' | 'log' | 'red' | 'warnings' | 'publish' | 'downloads' | 'toolVersion'>
 
 /**
  * The build report. Every interpolated value is escaped: paths, notes and
@@ -17,6 +17,12 @@ export function renderReport(r: ReportData, tag: string, mode: 'full' | 'short' 
     const shown = r.red.slice(0, MAX_ATTENTION_LINES)
     lines.push('## Needs attention', '', ...shown.map((x) => `- ${esc(x)}`))
     if (r.red.length > shown.length) lines.push(`- … and ${r.red.length - shown.length} more`)
+    lines.push('')
+  }
+  if (r.warnings.length) {
+    const shown = r.warnings.slice(0, MAX_ATTENTION_LINES)
+    lines.push('## Warnings', '', ...shown.map((x) => `- ${esc(x)}`))
+    if (r.warnings.length > shown.length) lines.push(`- … and ${r.warnings.length - shown.length} more`)
     lines.push('')
   }
   lines.push('## TM', '', '| Locale | Units | Built | Stale projects |', '|---|---:|---|---|')

@@ -7,7 +7,8 @@ import { apiUrl } from '../wporg/urls.js'
 import { REPO_MAINTAINER } from './scope.js'
 
 export const MAX_NEW_PATHS = 20
-const MIN_PERCENT = 90
+/** The share of strings translated and approved that a locale's TM project needs (CONTRIBUTING). */
+export const MIN_PERCENT = 90
 
 function paths(text: string | undefined): string[] {
   if (!text) return []
