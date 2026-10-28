@@ -21,8 +21,8 @@ export function minPolyglotsFor(schema: number, pin: string): string {
 
 export interface Downlevel { schema: number; bytes: Buffer }
 
-/** The rule name and the section schema 3 added; neither exists for a schema 2 reader. */
-const DATE_RULE = 'date-format'
+/** The rule names schema 3 added; a schema 2 reader refuses them in rules.enable and rules.disable. */
+const SCHEMA_3_RULES = ['date-format', 'name-order']
 const NBSP = ' '
 const CLOCK_24H = { find: '(?<![A-Za-z\\\\])[gh]:i(?![A-Za-z])', level: 'hint', when: { source: ':i' }, note: 'Use 24-hour time in a time format, as "H:i" for "g:i a"' }
 
@@ -50,16 +50,18 @@ export function downlevels(text: string, schema: number): Downlevel[] {
  * becomes hints. clock: 24h is the 12-hour time hint; each formats entry is a
  * hint on the copied source, and again with the non-breaking space core
  * writes before am/pm ("g:i\u00a0a"), which a plain space does not match. order has no schema 2 form
- * beyond those entries. date-format leaves rules.enable and rules.disable.
+ * beyond those entries. names has no schema 2 form and goes. date-format and
+ * name-order leave rules.enable and rules.disable.
  */
 function threeToTwo(text: string): string {
   const doc = YAML.parseDocument(text)
   if (doc.errors.length) throw new Error(`rules file does not parse: ${doc.errors[0]!.message}`)
   const dateTime = (doc.toJS() as { dateTime?: { clock?: string; formats?: Record<string, string> } } | null)?.dateTime
   doc.delete('dateTime')
+  doc.delete('names')
   for (const key of ['enable', 'disable']) {
     const seq = doc.getIn(['rules', key], true)
-    if (isSeq(seq)) seq.items = seq.items.filter((i) => !(isScalar(i) && i.value === DATE_RULE))
+    if (isSeq(seq)) seq.items = seq.items.filter((i) => !(isScalar(i) && SCHEMA_3_RULES.includes(i.value as string)))
   }
   const added = datePatterns(dateTime)
   if (added.length) appendPatterns(doc, added)
