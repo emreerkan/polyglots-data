@@ -18,12 +18,24 @@
 # Any change re-reviews files of this locale from scratch on their next run.
 # Check the file with: polyglots rules check --file locales/nl_NL/rules.yaml
 
-schema: 2
+schema: 3
 
 # [PUNCTUATION AND CAPITALIZATION] Sentence case, never title case.
 rules:
   enable: [title-case]
   disable: []
+
+# [DATE AND TIME FORMATS] PHP date and time formats are rearranged into
+# Dutch order with 24-hour time, not copied.
+dateTime:
+  clock: 24h
+  order: dmy
+  formats:
+    'F j, Y': 'j F Y'
+    'M j, Y': 'j M Y'
+    'M j': 'j M'
+    'n/j/Y': 'd-m-Y'
+    'g:i a': 'H:i'
 
 glossaryStemRatio: 0.7
 
@@ -111,16 +123,6 @@ patterns:
     level: hint
     note: No space before the percent sign, as in "10%"
 
-  # [DATE AND TIME FORMATS] A date or time format is rearranged, not copied.
-  - find: '(?<![A-Za-z\\])g:i'
-    level: hint
-    when: { source: 'g:i' }
-    note: Use 24-hour time in a time format, as "G:i" for "g:i a"
-  - text: 'F j, Y'
-    level: hint
-    when: { source: 'F j, Y' }
-    note: Use the Dutch date order, as "j F Y" for "F j, Y"
-
 # [STYLE], [NEVER CHANGE], [PUNCTUATION AND CAPITALIZATION], [DATE AND TIME
 # FORMATS]. What a pattern cannot check. At most 1500 characters.
 guidance: |
@@ -132,7 +134,7 @@ guidance: |
   Add "de", "het" or "aan" only when they make the text clearer.
   Add the commas Dutch grammar needs, even where the source has none.
   Percentages take no space: 10%.
-  A date or time format (PHP or JavaScript format codes) is rearranged into Dutch order with 24-hour time: "F j, Y" becomes "j F Y", "g:i a" becomes "G:i".
+  A date or time format (PHP or JavaScript format codes) is rearranged into Dutch order with 24-hour time: "F j, Y" becomes "j F Y", "g:i a" becomes "H:i".
 
 # [TONE] informal.
 register: '- Address the reader informally with "je/jouw", never "u/uw". Never use "alstublieft" or "a.u.b."; leave "please" out. Friendly and easygoing, but no slang.'
