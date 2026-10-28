@@ -1,0 +1,12 @@
+# polyglots rules for hu_HU (Hungarian)
+#
+# Draft: only the name order, taken from CLDR 49 person names, where the
+# "hu" data lists "hu" as surnameFirst. Not yet confirmed by the hu_HU locale
+# team. The name-order check runs only with this key set.
+#
+# Check the file with: polyglots rules check --file locales/hu_HU/rules.yaml
+
+schema: 3
+
+names:
+  order: family-first
