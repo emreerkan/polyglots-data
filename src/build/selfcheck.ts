@@ -40,10 +40,10 @@ export function selfCheck(assets: Map<string, Buffer>, manifest: Manifest, state
     })
   }
   for (const e of manifest.rules.filter((x) => own(x.url))) {
-    guard(`${e.locale}: rules`, () => {
+    guard(`${e.locale}: rules schema ${e.schema}`, () => {
       const b = asset(e.url)
-      if (!b) { problems.push(`${e.locale}: rules asset missing`); return }
-      if (sha512(b) !== e.sha512) problems.push(`${e.locale}: rules sha512 mismatch`)
+      if (!b) { problems.push(`${e.locale}: rules schema ${e.schema} asset missing`); return }
+      if (sha512(b) !== e.sha512) problems.push(`${e.locale}: rules schema ${e.schema} sha512 mismatch`)
       const schema = (YAML.parse(b.toString('utf8')) as { schema?: unknown } | null)?.schema
       if (schema !== e.schema) problems.push(`${e.locale}: rules schema ${String(schema)} ≠ ${e.schema}`)
     })
