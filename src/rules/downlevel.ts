@@ -13,7 +13,7 @@ export const OLDEST_SCHEMA = 2
  * row at that schema. A schema missing here is new with the pinned version,
  * and its rows take the pin.
  */
-export const SCHEMA_MIN_POLYGLOTS: Readonly<Record<number, string>> = { 2: '1.0.0' }
+export const SCHEMA_MIN_POLYGLOTS: Readonly<Record<number, string>> = { 2: '1.0.0', 3: '1.2.0' }
 
 export function minPolyglotsFor(schema: number, pin: string): string {
   return SCHEMA_MIN_POLYGLOTS[schema] ?? pin
@@ -24,7 +24,7 @@ export interface Downlevel { schema: number; bytes: Buffer }
 /** The rule names schema 3 added; a schema 2 reader refuses them in rules.enable and rules.disable. */
 const SCHEMA_3_RULES = ['date-format', 'name-order']
 const NBSP = ' '
-const CLOCK_24H = { find: '(?<![A-Za-z\\\\])[gh]:i(?![A-Za-z])', level: 'hint', when: { source: ':i' }, note: 'Use 24-hour time in a time format, as "H:i" for "g:i a"' }
+const CLOCK_24H_FIND = '(?<![A-Za-z\\\\])[gh]:i(?![A-Za-z])'
 
 interface Pattern { text?: string; find?: string; level?: string; note?: string; when?: { source?: string; notSource?: string } }
 
@@ -74,7 +74,10 @@ function threeToTwo(text: string): string {
 function datePatterns(dateTime: { clock?: string; formats?: Record<string, string> } | undefined): Pattern[] {
   if (!dateTime) return []
   const out: Pattern[] = []
-  if (dateTime.clock === '24h') out.push(CLOCK_24H)
+  if (dateTime.clock === '24h') {
+    const example = dateTime.formats?.['g:i a'] ?? 'H:i'
+    out.push({ find: CLOCK_24H_FIND, level: 'hint', when: { source: ':i' }, note: `Use 24-hour time in a time format, as "${example}" for "g:i a"` })
+  }
   for (const [source, target] of Object.entries(dateTime.formats ?? {})) {
     const core = source.replace(/ (?=[aA](?![A-Za-z]))/g, NBSP)
     for (const v of core === source ? [source] : [source, core]) out.push({ text: v, level: 'hint', when: { source: v }, note: `Use "${target}" for "${source}"` })

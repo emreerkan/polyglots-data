@@ -1,4 +1,4 @@
-import { mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -11,9 +11,10 @@ const tmp = (text: string) => { const d = mkdtempSync(join(tmpdir(), 'pd-')); co
 describe('checkRulesFile', () => {
   it('passes every committed rules file', async () => {
     for (const l of ['tr_TR', 'sv_SE', 'el', 'bo', 'dzo', 'th']) {
-      const r = await checkRulesFile(join(root, 'locales', l, 'rules.yaml'), ctx)
+      const file = join(root, 'locales', l, 'rules.yaml')
+      const r = await checkRulesFile(file, ctx)
       expect(r.findings.filter((f) => f.level === 'error'), l).toEqual([])
-      expect(r.schema).toBe(2)
+      expect(r.schema, l).toBe(Number(/^schema: (\d+)$/m.exec(readFileSync(file, 'utf8'))![1]))
     }
   }, 120_000)
 
