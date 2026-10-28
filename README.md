@@ -56,6 +56,15 @@ locale still get updates. Each release holds:
 | th | – | draft |
 | bo | – | draft |
 | dzo | – | draft |
+| hi_IN | yes | draft |
+| hu_HU | – | draft |
+| ja | – | draft |
+| ko_KR | – | draft |
+| vi | – | draft |
+| zh_CN | – | draft |
+| zh_TW | – | draft |
+| zh_HK | – | draft |
+| km | – | draft |
 
 A rules file is `maintained` when the locale team agreed to it, and `draft`
 otherwise. To add a locale, a TM project or a rule, see
