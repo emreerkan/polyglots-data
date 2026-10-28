@@ -44,7 +44,8 @@ even when a locale maintainer approved it.
 
 A pull request that changes `locales/<locale>/` changes nothing outside that
 folder. Changes to `core/`, `data/`, `.github/` and the tooling are made by the
-repository maintainer.
+repository maintainer. The repository maintainer may also change several
+locales in one pull request.
 
 ## Becoming a locale maintainer
 
