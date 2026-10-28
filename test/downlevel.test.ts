@@ -71,6 +71,11 @@ describe('downlevels', () => {
     expect(doc.patterns[2]!.note).toBe('Use "H:i" for "g:i a"')
   })
 
+  it('takes the 24-hour example from the file', () => {
+    const [d] = lower("schema: 3\ndateTime:\n  clock: 24h\n  formats:\n    'g:i a': 'G:i'\n")
+    expect((YAML.parse(d!.text) as { patterns: Array<{ note: string }> }).patterns[0]!.note).toBe('Use 24-hour time in a time format, as "G:i" for "g:i a"')
+  })
+
   it('drops names and name-order', () => {
     const [d] = lower('schema: 3\nrules:\n  enable: [name-order]\n  disable: []\nnames:\n  order: family-first\n')
     expect(YAML.parse(d!.text)).toEqual({ schema: 2, rules: { enable: [], disable: [] } })
