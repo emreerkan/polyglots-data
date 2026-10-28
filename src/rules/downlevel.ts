@@ -13,7 +13,7 @@ export const OLDEST_SCHEMA = 2
  * row at that schema. A schema missing here is new with the pinned version,
  * and its rows take the pin.
  */
-export const SCHEMA_MIN_POLYGLOTS: Readonly<Record<number, string>> = { 2: '1.0.0' }
+export const SCHEMA_MIN_POLYGLOTS: Readonly<Record<number, string>> = { 2: '1.0.0', 3: '1.2.0' }
 
 export function minPolyglotsFor(schema: number, pin: string): string {
   return SCHEMA_MIN_POLYGLOTS[schema] ?? pin

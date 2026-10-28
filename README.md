@@ -15,7 +15,8 @@ For each locale this repository holds:
 
 ## Using the data
 
-With polyglots 1.0.0 or later:
+With polyglots 1.0.0 or later. The date and name checks (`dateTime`, `names`)
+need polyglots 1.2.0; older releases get the same file without them.
 
 ```sh
 polyglots tm fetch tr_TR      # import the tr_TR TM into the local database

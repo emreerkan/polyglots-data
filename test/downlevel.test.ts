@@ -86,7 +86,7 @@ describe('downlevels', () => {
     expect(YAML.parse(d!.text)).toEqual({ schema: 2 })
   })
 
-  it('is read as a valid schema 2 file by polyglots 1.0.0', async () => {
+  it('is read as a valid schema 2 file by the pinned polyglots', async () => {
     const nl = readFileSync(join(root, 'locales', 'nl_NL', 'rules.yaml'), 'utf8')
       .replace(/^schema: 2$/m, "schema: 3\ndateTime:\n  clock: 24h\n  order: dmy\n  formats:\n    'M j, Y': 'j M Y'\n    'g:i a': 'G:i'")
     const [d] = lower(nl)
