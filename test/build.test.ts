@@ -17,8 +17,8 @@ function po(entries: Array<[string, string]>): Buffer {
   const head = 'msgid ""\nmsgstr ""\n"Content-Type: text/plain; charset=UTF-8\\n"\n"Plural-Forms: nplurals=2; plural=n > 1;\\n"\n\n'
   return Buffer.from(head + entries.map(([s, t]) => `msgid "${s}"\nmsgstr "${t}"\n`).join('\n'))
 }
-const api = (current: number, lastModified = '2026-10-15 00:00:00') => Buffer.from(JSON.stringify({
-  translation_sets: [{ locale: 'tr', slug: 'default', wp_locale: 'tr_TR', current_count: current, all_count: current, percent_translated: 100, last_modified: lastModified }],
+const api = (current: number, lastModified = '2026-10-15 00:00:00', percent = 100) => Buffer.from(JSON.stringify({
+  translation_sets: [{ locale: 'tr', slug: 'default', wp_locale: 'tr_TR', current_count: current, all_count: current, percent_translated: percent, last_modified: lastModified }],
 }))
 function client(files: Record<string, Buffer | number>): HttpClient & { calls: string[] } {
   const calls: string[] = []
@@ -63,6 +63,21 @@ describe('runBuild', () => {
     expect((xml.match(/x-weight/g) ?? []).length).toBe(1)
     expect(tm.bytesUncompressed).toBe(Buffer.byteLength(xml))
     expect(selfCheck(r.assets, r.manifest, r.state, 'data-20261016-030000')).toEqual([])
+  })
+
+  it('warns about a locale project under 90% and a project with no units', async () => {
+    const c = client({
+      [apiUrl('wp/dev')]: api(2, undefined, 50), [exportUrl('wp/dev', TR)]: po([['Post', 'Yazı']]),
+      [apiUrl('wp-plugins/a/dev')]: api(2, undefined, 85), [exportUrl('wp-plugins/a/dev', TR)]: po([['Shared', 'Ortak']]),
+      [apiUrl('wp-plugins/a/dev-readme')]: api(2, undefined, 10), [exportUrl('wp-plugins/a/dev-readme', TR)]: po([['Long', 'Uzun']]),
+      [apiUrl('wp-themes/b')]: api(0), [exportUrl('wp-themes/b', TR)]: po([]),
+    })
+    const r = await runBuild(input({ repo: repo(['wp-plugins/a/dev', 'wp-plugins/a/dev-readme', 'wp-themes/b']) }), c)
+    expect(r.red).toEqual([])
+    expect(r.warnings).toEqual([
+      'tr_TR wp-plugins/a/dev: 85% translated, under the 90% a TM project needs', // core and readmes have no threshold
+      'tr_TR wp-themes/b: no units',
+    ])
   })
 
   it('second run with an unchanged API downloads nothing and does not publish', async () => {

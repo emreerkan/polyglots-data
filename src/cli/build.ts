@@ -77,5 +77,5 @@ const publish = result.publish && problems.length === 0
 writeFileSync(join(out, 'report.md'), renderReport({ ...result, red, publish }, values.tag, 'full'))
 writeFileSync(join(out, 'notes.md'), renderReport({ ...result, red, publish }, values.tag, 'short'))
 writeFileSync(join(out, 'outcome.json'), JSON.stringify({ tag: values.tag, publish, red }, null, 2) + '\n')
-console.log(`build ${values.tag}: rebuilt ${rebuild.join(', ') || 'none'}; ${result.downloads} exports; publish ${publish}; red ${red.length}`)
+console.log(`build ${values.tag}: rebuilt ${rebuild.join(', ') || 'none'}; ${result.downloads} exports; publish ${publish}; red ${red.length}; warnings ${result.warnings.length}`)
 process.exit(problems.length ? 1 : 0)

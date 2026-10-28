@@ -2,6 +2,7 @@ import { gzipSync } from 'node:zlib'
 import type { LocaleData, Repo } from '../config/load.js'
 import { manifestSlug, targetLang, type WpLocale, type WpLocales } from '../locales.js'
 import { releaseUrl, type Manifest, type ManifestProject, type RulesEntry, type TmEntry } from '../manifest.js'
+import { MIN_PERCENT } from '../check/new-paths.js'
 import { isLongText } from '../paths.js'
 import { poToUnits } from '../po/units.js'
 import { resolveProjects } from '../resolve.js'
@@ -28,14 +29,14 @@ export interface BuildInput {
   rules: Map<string, { bytes: Buffer; check: RulesCheckResult; older?: OlderRules[] }>; now: Date
 }
 export interface ProjectLog { locale: string; path: string; action: 'cached' | 'downloaded' | 'stale' | 'missing'; units: number; note?: string }
-export interface BuildResult { assets: Map<string, Buffer>; manifest: Manifest; state: State; log: ProjectLog[]; red: string[]; publish: boolean; downloads: number; toolVersion: string }
+export interface BuildResult { assets: Map<string, Buffer>; manifest: Manifest; state: State; log: ProjectLog[]; red: string[]; warnings: string[]; publish: boolean; downloads: number; toolVersion: string }
 
 const byLocale = (a: { locale: string }, b: { locale: string }) => (a.locale < b.locale ? -1 : a.locale > b.locale ? 1 : 0)
 const json = (v: unknown) => Buffer.from(JSON.stringify(v, null, 2) + '\n')
 
 interface Ctx {
   input: BuildInput; api: Map<string, SetInfo[] | undefined>; wporg: HttpClient
-  assets: Map<string, Buffer>; log: ProjectLog[]; red: string[]; downloads: number
+  assets: Map<string, Buffer>; log: ProjectLog[]; red: string[]; warnings: string[]; downloads: number
 }
 
 /** One API request per distinct path across the rebuilt locales (spec 5.2 step 1). */
@@ -78,11 +79,16 @@ async function buildLocale(c: Ctx, l: LocaleData, loc: WpLocale): Promise<{ entr
   const kept: Array<{ path: string; units: Unit[]; built: string; stale?: string }> = []
   const projectsState: Record<string, CachedProject> = {}
 
+  const own = new Set(l.tm!.projects.map((p) => p.path))
   for (const path of resolveProjects(input.repo.core, l.tm!)) {
     const cached = prevState?.projects[path]
     const lastUnits = previous.units.get(l.code)?.get(path)
     const sets = c.api.get(path)
     const set = sets ? findSet(sets, loc) : undefined
+    // Core projects and readmes have no threshold; the locale's own projects were added at 90% or more.
+    if (set && own.has(path) && !isLongText(path) && set.percent < MIN_PERCENT) {
+      c.warnings.push(`${l.code} ${path}: ${set.percent}% translated, under the ${MIN_PERCENT}% a TM project needs`)
+    }
     if (cached && lastUnits && sets && set && !needsDownload(cached, set, nowMs, input.force)) {
       kept.push({ path, units: lastUnits.units, built: lastUnits.built })
       // The API is back at the last good values: the cached units are current, so the project is no longer stale.
@@ -131,6 +137,7 @@ async function buildLocale(c: Ctx, l: LocaleData, loc: WpLocale): Promise<{ entr
     c.red.push(`${l.code}: no project left`)
     return {}
   }
+  for (const k of kept) if (k.units.length === 0) c.warnings.push(`${l.code} ${k.path}: no units`)
   const merged = mergeUnits(kept)
   const created = new Date(Math.max(...kept.map((k) => Date.parse(k.built))))
   const xml = Buffer.from(writeTmx(merged, { lang: targetLang(l.code, loc), toolVersion: TMX_FORMAT_VERSION, created }))
@@ -215,7 +222,7 @@ export async function runBuild(input: BuildInput, wporg: HttpClient): Promise<Bu
   const withTm = [...repo.locales.values()].filter((l) => l.tm)
   const rebuild = new Set(input.rebuild)
   const c: Ctx = {
-    input, wporg, assets: new Map(), log: [], downloads: 0,
+    input, wporg, assets: new Map(), log: [], warnings: [], downloads: 0,
     red: previous.first ? [] : previous.problems.map((p) => `previous release: ${p}`),
     api: await askApi(withTm.filter((l) => rebuild.has(l.code) && input.wp.has(l.code)), repo.core, wporg),
   }
@@ -237,5 +244,5 @@ export async function runBuild(input: BuildInput, wporg: HttpClient): Promise<Bu
   const publish = previous.first || (!damaged && (comparable(manifest) !== comparable(previous.index) || stableState(state) !== stableState(previous.state)))
   c.assets.set('index.json', json(manifest))
   c.assets.set('state.json', json(state))
-  return { assets: c.assets, manifest, state, log: c.log, red: c.red, publish, downloads: c.downloads, toolVersion: input.toolVersion }
+  return { assets: c.assets, manifest, state, log: c.log, red: c.red, warnings: c.warnings, publish, downloads: c.downloads, toolVersion: input.toolVersion }
 }
