@@ -154,7 +154,8 @@ On every pull request:
 - Every project path exists on translate.wordpress.org and has approved
   strings for the locale. CI reports the count in its summary.
 - The rules file is valid for polyglots and meets the safety limits above.
-- The pull request changes only one locale's folder.
+- The pull request changes only one locale's folder. The repository
+  maintainer may change several.
 - Whether a locale maintainer of that locale approved it.
 
 The CI summary lists every changed regular expression, automatic fix and
