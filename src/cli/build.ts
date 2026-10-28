@@ -9,7 +9,8 @@ import { selfCheck } from '../build/selfcheck.js'
 import { loadRepo } from '../config/load.js'
 import { loadWpLocales } from '../locales.js'
 import { LATEST } from '../manifest.js'
-import { checkRulesFile, loadRulesContext } from '../rules/check.js'
+import { checkOlderRules, checkRulesFile, loadRulesContext, type OlderRules } from '../rules/check.js'
+import { OLDEST_SCHEMA } from '../rules/downlevel.js'
 import { createClient } from '../wporg/client.js'
 import { buildArgErrors, localesFromChanges, parseList } from './args.js'
 
@@ -46,9 +47,13 @@ if (rebuild.length === 0 && values['changed-from'] && !/^0+$/.test(values['chang
 }
 
 const ctx = loadRulesContext(root)
-const rules = new Map<string, { bytes: Buffer; check: Awaited<ReturnType<typeof checkRulesFile>> }>()
+const rules = new Map<string, { bytes: Buffer; check: Awaited<ReturnType<typeof checkRulesFile>>; older?: OlderRules[] }>()
 for (const l of repo.locales.values()) {
-  if (l.rulesFile) rules.set(l.code, { bytes: readFileSync(l.rulesFile), check: await checkRulesFile(l.rulesFile, ctx) })
+  if (!l.rulesFile) continue
+  const check = await checkRulesFile(l.rulesFile, ctx)
+  const failed = check.findings.some((f) => f.level === 'error')
+  const older = !failed && (check.schema ?? 0) > OLDEST_SCHEMA ? await checkOlderRules(l.rulesFile, check.schema!, ctx) : undefined
+  rules.set(l.code, { bytes: readFileSync(l.rulesFile), check, ...(older ? { older } : {}) })
 }
 
 const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { devDependencies?: Record<string, string> }
